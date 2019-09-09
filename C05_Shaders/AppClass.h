@@ -31,6 +31,9 @@ class AppClass
 	
 	glm::vec3 m_v3Color = glm::vec3(-1.0f); //Color of shape
 
+	sf::Keyboard::Key m_lastKeyPressed = sf::Keyboard::Escape; // The Last Key Pressed 
+	bool m_complement = true; // Use Complementary Colors
+
 	bool m_bRunning = true; //Running Flag
 		
 public:
