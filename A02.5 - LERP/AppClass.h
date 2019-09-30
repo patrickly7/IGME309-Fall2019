@@ -20,7 +20,7 @@ class Application
 {
 	uint m_uOrbits = 0; //number of shapes starting at 3 and increasing in sides
 	std::vector<uint> m_shapeList; //shape index for circles
-	String m_sProgrammer = "Alberto Bobadilla - labigm@rit.edu";
+	String m_sProgrammer = "Patrick Ly - pxl7219@rit.edu";
 	
 private:
 	static ImGuiObject gui; //GUI object
@@ -44,6 +44,9 @@ private:
 	CameraManager* m_pCameraMngr = nullptr; //Singleton for the camera manager
 	ControllerInput* m_pController[8]; //Controller
 	uint m_uActCont = 0; //Active Controller of the Application
+
+	std::vector<std::vector<vector3>> m_stopsList; // List of List of Stops
+	float m_timeToNextPoint = 0.5f; // Time in seconds to reach the next stop point
 
 public:
 #pragma region Constructor / Run / Destructor
