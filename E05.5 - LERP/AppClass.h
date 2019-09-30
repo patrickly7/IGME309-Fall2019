@@ -12,7 +12,7 @@ Date: 2017/05
 
 class Application
 {
-	String m_sProgrammer = "Alberto Bobadilla - labigm@rit.edu";
+	String m_sProgrammer = "Patrick Ly - pxl7219@rit.edu";
 	std::vector<vector3> m_stopsList;
 	Simplex::Model* m_pModel = nullptr;
 private:
@@ -36,6 +36,8 @@ private:
 	CameraManager* m_pCameraMngr = nullptr; //Singleton for the camera manager
 	ControllerInput* m_pController[8]; //Controller
 	uint m_uActCont = 0; //Active Controller of the Application
+
+	float m_timeToNextPoint = 2.0f; // Time in seconds to reach the next stop point
 
 public:
 #pragma region Constructor / Run / Destructor

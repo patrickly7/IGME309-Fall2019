@@ -2,7 +2,7 @@
 void Application::InitVariables(void)
 {
 	//Change this to your name and email
-	m_sProgrammer = "Alberto Bobadilla - labigm@rit.edu";
+	m_sProgrammer = "Patrick Ly - pxl7219@rit.edu";
 
 	//Set the position and target of the camera
 	m_pCameraMngr->SetPositionTargetAndUpward(vector3(5.0f,3.0f,15.0f), ZERO_V3, AXIS_Y);
@@ -51,24 +51,22 @@ void Application::Display(void)
 	static uint uClock = m_pSystem->GenClock(); //generate a new clock for that timer
 	fTimer += m_pSystem->GetDeltaTime(uClock); //get the delta time for that timer
 
-	//calculate the current position
+	// Calculate the current position
 	vector3 v3CurrentPos;
 	
+	// Calculate the current starting and ending points
+	int currIdx = (int)floor(fTimer / m_timeToNextPoint);
+	vector3 startPoint = m_stopsList[currIdx % m_stopsList.size()];
+	vector3 endPoint = m_stopsList[(currIdx + 1) % m_stopsList.size()];
 
-
-
-
-	//your code goes here
-	v3CurrentPos = vector3(0.0f, 0.0f, 0.0f);
-	//-------------------
-	
-
-
+	// Use LERP Interpolation to Move Between Stop Points
+	float currentProgress = (float)fmod(fTimer, m_timeToNextPoint) / m_timeToNextPoint; // Between 0 and 1
+	v3CurrentPos = glm::lerp(startPoint, endPoint, currentProgress);
 	
 	matrix4 m4Model = glm::translate(v3CurrentPos);
 	m_pModel->SetModelMatrix(m4Model);
 
-	m_pMeshMngr->Print("\nTimer: ");//Add a line on top
+	m_pMeshMngr->Print("\nTimer: "); // Add a line on top
 	m_pMeshMngr->PrintLine(std::to_string(fTimer), C_YELLOW);
 
 	// Draw stops
