@@ -173,6 +173,7 @@ void MyMesh::AddQuad(vector3 a_vBottomLeft, vector3 a_vBottomRight, vector3 a_vT
 	AddVertexPosition(a_vBottomRight);
 	AddVertexPosition(a_vTopRight);
 }
+
 void MyMesh::GenerateCube(float a_fSize, vector3 a_v3Color)
 {
 	if (a_fSize < 0.01f)
@@ -218,6 +219,7 @@ void MyMesh::GenerateCube(float a_fSize, vector3 a_v3Color)
 	CompleteMesh(a_v3Color);
 	CompileOpenGL3X();
 }
+
 void MyMesh::GenerateCuboid(vector3 a_v3Dimensions, vector3 a_v3Color)
 {
 	Release();
@@ -259,6 +261,7 @@ void MyMesh::GenerateCuboid(vector3 a_v3Dimensions, vector3 a_v3Color)
 	CompleteMesh(a_v3Color);
 	CompileOpenGL3X();
 }
+
 void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions, vector3 a_v3Color)
 {
 	if (a_fRadius < 0.01f)
@@ -275,14 +278,31 @@ void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions,
 	Release();
 	Init();
 
-	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
-	// -------------------------------
+	auto subDivisionDistance = 2 * PI / a_nSubdivisions;
+
+	vector3 topCenter = vector3(0, a_fHeight / 2, 0);
+	vector3 bottomCenter = vector3(0, -(a_fHeight / 2), 0);
+
+	for (int division = 0; division < a_nSubdivisions; division++)
+	{
+		double currAngle = division * subDivisionDistance;
+		auto currBottomPoint = vector3(cos(currAngle) * a_fRadius, -(a_fHeight / 2), sin(currAngle) * a_fRadius);
+
+		double nextAngle = ((double)division + 1) * subDivisionDistance;
+		auto nextBottomPoint = vector3(cos(nextAngle) * a_fRadius, -(a_fHeight / 2), sin(nextAngle) * a_fRadius);
+
+		// Add triangle to base of cone
+		AddTri(currBottomPoint, nextBottomPoint, bottomCenter);
+
+		// Add triangle on side of cone
+		AddTri(nextBottomPoint, currBottomPoint, topCenter);
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
 	CompileOpenGL3X();
 }
+
 void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisions, vector3 a_v3Color)
 {
 	if (a_fRadius < 0.01f)
@@ -299,14 +319,34 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 	Release();
 	Init();
 
-	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
-	// -------------------------------
+	auto subDivisionDistance = 2 * PI / a_nSubdivisions;
+
+	vector3 topCenter = vector3(0, a_fHeight / 2, 0);
+	vector3 bottomCenter = vector3(0, -(a_fHeight / 2), 0);
+
+	for (int division = 0; division < a_nSubdivisions; division++)
+	{
+		double currAngle = division * subDivisionDistance;
+		auto currTopPoint = vector3(cos(currAngle) * a_fRadius, a_fHeight / 2, sin(currAngle) * a_fRadius);
+		auto currBottomPoint = vector3(cos(currAngle) * a_fRadius, -(a_fHeight / 2), sin(currAngle) * a_fRadius);
+
+		double nextAngle = ((double)division + 1) * subDivisionDistance;
+		auto nextTopPoint = vector3(cos(nextAngle) * a_fRadius, a_fHeight / 2, sin(nextAngle) * a_fRadius);
+		auto nextBottomPoint = vector3(cos(nextAngle) * a_fRadius, -(a_fHeight / 2), sin(nextAngle) * a_fRadius);
+
+		// Add triangle to top and bottom faces of the cylinder
+		AddTri(nextTopPoint, currTopPoint, topCenter);
+		AddTri(currBottomPoint, nextBottomPoint, bottomCenter);
+
+		// Add one of the sides to the cylinder
+		AddQuad(nextBottomPoint, currBottomPoint, nextTopPoint, currTopPoint);
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
 	CompileOpenGL3X();
 }
+
 void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fHeight, int a_nSubdivisions, vector3 a_v3Color)
 {
 	if (a_fOuterRadius < 0.01f)
@@ -329,14 +369,36 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 	Release();
 	Init();
 
-	// Replace this with your code
-	GenerateCube(a_fOuterRadius * 2.0f, a_v3Color);
-	// -------------------------------
+	auto subDivisionDistance = 2 * PI / a_nSubdivisions;
+
+	for (int division = 0; division < a_nSubdivisions; division++)
+	{
+		double currAngle = division * subDivisionDistance;
+		auto currTopInnerPoint = vector3(cos(currAngle) * a_fInnerRadius, a_fHeight / 2, sin(currAngle) * a_fInnerRadius);
+		auto currBottomInnerPoint = vector3(cos(currAngle) * a_fInnerRadius, -(a_fHeight / 2), sin(currAngle) * a_fInnerRadius);
+		auto currTopOuterPoint = vector3(cos(currAngle) * a_fOuterRadius, a_fHeight / 2, sin(currAngle) * a_fOuterRadius);
+		auto currBottomOuterPoint = vector3(cos(currAngle) * a_fOuterRadius, -(a_fHeight / 2), sin(currAngle) * a_fOuterRadius);
+
+		double nextAngle = ((double)division + 1) * subDivisionDistance;
+		auto nextTopInnerPoint = vector3(cos(nextAngle) * a_fInnerRadius, a_fHeight / 2, sin(nextAngle) * a_fInnerRadius);
+		auto nextBottomInnerPoint = vector3(cos(nextAngle) * a_fInnerRadius, -(a_fHeight / 2), sin(nextAngle) * a_fInnerRadius);
+		auto nextTopOuterPoint = vector3(cos(nextAngle) * a_fOuterRadius, a_fHeight / 2, sin(nextAngle) * a_fOuterRadius);
+		auto nextBottomOuterPoint = vector3(cos(nextAngle) * a_fOuterRadius, -(a_fHeight / 2), sin(nextAngle) * a_fOuterRadius);
+
+		// Add Quad to Ring on Top and Bottom of Tube
+		AddQuad(nextTopOuterPoint, currTopOuterPoint, nextTopInnerPoint, currTopInnerPoint);
+		AddQuad(currBottomOuterPoint, nextBottomOuterPoint, currBottomInnerPoint, nextBottomInnerPoint);
+
+		// Add Quads to Outside/Inside of Tube
+		AddQuad(nextTopInnerPoint, currTopInnerPoint, nextBottomInnerPoint, currBottomInnerPoint);
+		AddQuad(currTopOuterPoint, nextTopOuterPoint, currBottomOuterPoint, nextBottomOuterPoint);
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
 	CompileOpenGL3X();
 }
+
 void MyMesh::GenerateTorus(float a_fOuterRadius, float a_fInnerRadius, int a_nSubdivisionsA, int a_nSubdivisionsB, vector3 a_v3Color)
 {
 	if (a_fOuterRadius < 0.01f)
@@ -369,6 +431,7 @@ void MyMesh::GenerateTorus(float a_fOuterRadius, float a_fInnerRadius, int a_nSu
 	CompleteMesh(a_v3Color);
 	CompileOpenGL3X();
 }
+
 void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Color)
 {
 	if (a_fRadius < 0.01f)
@@ -386,9 +449,61 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 	Release();
 	Init();
 
-	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
-	// -------------------------------
+	vector3 bottomCenter = { 0, 0, -a_fRadius };
+
+	// Break the Sphere up into "Stacks (Horizontal)" and "Slices (Vertical)"
+	int numOfStacks = a_nSubdivisions;
+	int numOfSlices = numOfStacks * 2;
+
+	// Create a mapping of all the vertices of the sphere
+	std::vector<std::vector<vector3>> vertexMap;
+
+	// Get the vertices for each layer of the sphere
+	for (int stack = 0; stack < numOfStacks; stack++)
+	{
+		std::vector<vector3> currStackVertices;
+
+		float phi = (float)(PI / numOfStacks) * stack;
+		for (int slice = 0; slice < numOfSlices; slice++)
+		{
+			float theta = (float)(2 * PI / numOfSlices) * slice;
+
+			// Calculate the current vertex
+			vector3 currVertex;
+			currVertex.x = a_fRadius * (float)cos(theta) * (float)sin(phi);
+			currVertex.y = a_fRadius * (float)sin(theta) * (float)sin(phi);
+			currVertex.z = a_fRadius * (float)cos(phi);
+
+			currStackVertices.push_back(currVertex);
+		}
+
+		vertexMap.push_back(currStackVertices);
+	}
+
+	// Draw the sphere out using the vertex map
+	for (int stack = 0; stack < numOfStacks; stack++)
+	{
+		for (int slice = 0; slice < numOfSlices; slice++)
+		{
+			vector3 topLeft = vertexMap[stack][slice];
+			vector3 topRight = vertexMap[stack][(slice + 1) % numOfSlices];
+
+			// Create the individual stacks based on the vertices
+			if (stack < numOfStacks - 1)
+			{
+				vector3 bottomLeft = vertexMap[stack + 1][slice];
+				vector3 bottomRight = vertexMap[stack + 1][(slice + 1) % numOfSlices];
+
+				AddQuad(bottomLeft, bottomRight, topLeft, topRight);
+			}
+
+			// Create the Bottom of the Sphere
+			else 
+			{
+				AddTri(bottomCenter, topRight, topLeft);
+			}
+		}
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
