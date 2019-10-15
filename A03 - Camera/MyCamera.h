@@ -28,6 +28,18 @@ class MyCamera
 
 	matrix4 m_m4View; //View matrix
 	matrix4 m_m4Projection; //Projection Matrix
+
+	// Initialize the Forward, Up, and Right Vectors
+	vector3 m_forward = vector3(0.0f, 0.0f, -1.0f);
+	vector3 m_upward = vector3(0.0f, 1.0f, 0.0f);
+	vector3 m_rightward = vector3(1.0f, 0.0f, 0.0f);
+
+	/* 
+		Update the Forward, Up, and Right vectors using the current
+		Position, Target, and Above vectors.
+	*/
+	void UpdateDirectionalVectors();
+
 public:
 	/*
 	USAGE: Constructor
@@ -230,6 +242,12 @@ public:
 	OUTPUT: ---
 	*/
 	void MoveSideways(float a_fDistance = 0.1f);
+
+	/*
+		Update the current camera's rotation based on the
+		incoming yaw and pitch values.
+	*/
+	void ChangeYawAndPitch(float yaw, float pitch);
 };
 
 } //namespace Simplex

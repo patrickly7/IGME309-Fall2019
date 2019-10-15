@@ -325,6 +325,7 @@ void Application::ArcBall(float a_fSensitivity)
 	SetCursorPos(CenterX, CenterY);//Position the mouse in the center
 								   //return qArcBall; // return the new quaternion orientation
 }
+
 void Application::CameraRotation(float a_fSpeed)
 {
 	if (m_bFPC == false)
@@ -368,9 +369,13 @@ void Application::CameraRotation(float a_fSpeed)
 		fDeltaMouse = static_cast<float>(MouseY - CenterY);
 		fAngleX += fDeltaMouse * a_fSpeed;
 	}
-	//Change the Yaw and the Pitch of the camera
-	SetCursorPos(CenterX, CenterY);//Position the mouse in the center
+
+	// Change Yaw (Up/Down - Y Axis) and Pitch (Left/Right - X Axis)
+	m_pCamera->ChangeYawAndPitch(fAngleY, fAngleX);
+
+	SetCursorPos(CenterX, CenterY); // Position the mouse in the center
 }
+
 //Keyboard
 void Application::ProcessKeyboard(void)
 {
@@ -386,12 +391,26 @@ void Application::ProcessKeyboard(void)
 	if (fMultiplier)
 		fSpeed *= 5.0f;
 
+	// Forward and Backward Camera Movement
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
 		m_pCamera->MoveForward(fSpeed);
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 		m_pCamera->MoveForward(-fSpeed);
+
+	// Left and Right Camera Movement
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+		m_pCamera->MoveSideways(-fSpeed);
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+		m_pCamera->MoveSideways(fSpeed);
+
+	// Up and Down Camera Movement
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+		m_pCamera->MoveVertical(-fSpeed);
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
+		m_pCamera->MoveVertical(fSpeed);
 #pragma endregion
 }
+
 //Joystick
 void Application::ProcessJoystick(void)
 {

@@ -150,13 +150,47 @@ void Simplex::MyCamera::CalculateProjectionMatrix(void)
 	}
 }
 
-void MyCamera::MoveForward(float a_fDistance)
+void MyCamera::UpdateDirectionalVectors()
 {
-	//The following is just an example and does not take in account the forward vector (AKA view vector)
-	m_v3Position += vector3(0.0f, 0.0f,-a_fDistance);
-	m_v3Target += vector3(0.0f, 0.0f, -a_fDistance);
-	m_v3Above += vector3(0.0f, 0.0f, -a_fDistance);
+	m_forward = glm::normalize(m_v3Target - m_v3Position);
+	m_upward = glm::normalize(m_v3Above - m_v3Position);
+	m_rightward = glm::normalize( glm::cross(m_forward, m_upward) );
 }
 
-void MyCamera::MoveVertical(float a_fDistance){}//Needs to be defined
-void MyCamera::MoveSideways(float a_fDistance){}//Needs to be defined
+void MyCamera::MoveForward(float a_fDistance)
+{
+	m_v3Position += m_forward * a_fDistance;
+	m_v3Target += m_forward * a_fDistance;
+	m_v3Above += m_forward * a_fDistance;
+
+	UpdateDirectionalVectors();
+}
+
+void MyCamera::MoveVertical(float a_fDistance)
+{
+	m_v3Position += m_upward * a_fDistance;
+	m_v3Target += m_upward * a_fDistance;
+	m_v3Above += m_upward * a_fDistance;
+
+	UpdateDirectionalVectors();
+}
+
+void MyCamera::MoveSideways(float a_fDistance)
+{
+	m_v3Position += m_rightward * a_fDistance;
+	m_v3Target += m_rightward * a_fDistance;
+	m_v3Above += m_rightward * a_fDistance;
+
+	UpdateDirectionalVectors();
+}
+
+void MyCamera::ChangeYawAndPitch(float yaw, float pitch)
+{
+	float sensitivity = 5.0f; // Change how severe the angles affect camera rotation
+
+	// Rotate Camera Target over the Y-Axis, then X-Axis
+	auto targetRotatedOverY = glm::rotateY(m_v3Target, yaw / sensitivity);
+	auto targetRotatedOverX = glm::rotateX(targetRotatedOverY, pitch / sensitivity);
+
+	SetPositionTargetAndUpward(m_v3Position, targetRotatedOverX, m_upward);
+}
