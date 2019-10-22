@@ -76,22 +76,56 @@ vector3 MyRigidBody::GetMinGlobal(void) { return m_v3MinG; }
 vector3 MyRigidBody::GetMaxGlobal(void) { return m_v3MaxG; }
 vector3 MyRigidBody::GetHalfWidth(void) { return m_v3HalfWidth; }
 matrix4 MyRigidBody::GetModelMatrix(void) { return m_m4ToWorld; }
+
 void MyRigidBody::SetModelMatrix(matrix4 a_m4ModelMatrix)
 {
-	//to save some calculations if the model matrix is the same there is nothing to do here
+	// To save some calculations if the model matrix is the same there is nothing to do here
 	if (a_m4ModelMatrix == m_m4ToWorld)
 		return;
 
 	m_m4ToWorld = a_m4ModelMatrix;
 	
-	//your code goes here---------------------
-	m_v3MinG = m_v3MinL;
-	m_v3MaxG = m_v3MaxL;
-	//----------------------------------------
+	// Find the 8 Corners of the Oriented Bounding Box
+	std::vector<vector3> corners;
+	corners.push_back( vector3(m_v3MinL.x, m_v3MaxL.y, m_v3MaxL.z) ); // Front Top Left
+	corners.push_back( m_v3MaxL );									  // Front Top Right
+	corners.push_back( vector3(m_v3MinL.x, m_v3MinL.y, m_v3MaxL.z) ); // Front Bottom Left
+	corners.push_back( vector3(m_v3MaxL.x, m_v3MinL.y, m_v3MaxL.z) ); // Front Bottom Right
+	
+	corners.push_back( vector3(m_v3MinL.x, m_v3MaxL.y, m_v3MinL.z) ); // Back Top Left
+	corners.push_back( vector3(m_v3MaxL.x, m_v3MaxL.y, m_v3MinL.z) ); // Back Top Right
+	corners.push_back( m_v3MinL );									  // Back Bottom Left
+	corners.push_back( vector3(m_v3MaxL.x, m_v3MinL.y, m_v3MinL.z) ); // Back Bottom Right
 
-	//we calculate the distance between min and max vectors
+	// Convert from Local Space to Global Space
+	for (int i = 0; i < (int)corners.size(); i++)
+	{
+		corners[i] = vector3( m_m4ToWorld * vector4(corners[i], 1.0f) );
+	}
+	
+	vector3 minVector = corners[0];
+	vector3 maxVector = corners[0];
+	// Find the Min and Max of Each Corner
+	for (vector3 corner : corners)
+	{
+		if (corner.x < minVector.x) { minVector.x = corner.x; }
+		else if (corner.x > maxVector.x) { maxVector.x = corner.x; }
+
+		if (corner.y < minVector.y) { minVector.y = corner.y; }
+		else if (corner.y > maxVector.y) { maxVector.y = corner.y; }
+
+		if (corner.z < minVector.z) { minVector.z = corner.z; }
+		else if (corner.z > maxVector.z) { maxVector.z = corner.z; }
+	}
+
+	// Update the Min/Max Coordinates in Global Space
+	m_v3MinG = minVector;
+	m_v3MaxG = maxVector;
+
+	// Calculate the distance between min and max vectors
 	m_v3ARBBSize = m_v3MaxG - m_v3MinG;
 }
+
 //The big 3
 MyRigidBody::MyRigidBody(std::vector<vector3> a_pointList)
 {
