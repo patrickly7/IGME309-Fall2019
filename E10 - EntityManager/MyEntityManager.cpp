@@ -163,16 +163,6 @@ void Simplex::MyEntityManager::SetModelMatrix(matrix4 a_m4ToWorld, uint a_uIndex
 	m_entityList[a_uIndex]->SetModelMatrix(a_m4ToWorld);
 }
 
-void SetAxisVisibility(bool a_bVisibility, uint a_uIndex = -1)
-{
-
-}
-
-void SetAxisVisibility(bool a_bVisibility, String a_sUniqueID)
-{
-
-}
-
 //The big 3
 MyEntityManager::MyEntityManager(){Init();}
 MyEntityManager::MyEntityManager(MyEntityManager const& other){ }
