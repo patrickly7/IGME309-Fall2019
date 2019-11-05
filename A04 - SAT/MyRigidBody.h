@@ -241,6 +241,12 @@ private:
 	*/
 	void Init(void);
 	/*
+	Usage: Checks if two objects are overlapping when projected onto a given axis
+	Arguments: Vertices for both objects, the axis to be projected on
+	Output: True if they overlap, otherwise False
+	*/
+	bool Separation(MyRigidBody* const a_pOther, vector3 axis);
+	/*
 	USAGE: This will try to find a Separation Axis, will return 0 if 
 		none found (there is a collision)
 	ARGUMENTS: MyRigidBody* const a_pOther -> other rigid body to test against
