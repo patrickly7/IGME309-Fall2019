@@ -274,19 +274,125 @@ void MyRigidBody::AddToRenderList(void)
 	}
 }
 
+bool MyRigidBody::Separation(MyRigidBody* const a_pOther, vector3 axis)
+{
+	// Invalid Axis
+	if (axis == ZERO_V3 || axis.length() == 0)
+ 		return false;
+
+	// Find the 8 Corners of the Oriented Bounding Box (A)
+	std::vector<vector3> corners;
+	corners.push_back(vector3(m_v3MinL.x, m_v3MaxL.y, m_v3MaxL.z)); // Front Top Left
+	corners.push_back(m_v3MaxL);									// Front Top Right
+	corners.push_back(vector3(m_v3MinL.x, m_v3MinL.y, m_v3MaxL.z)); // Front Bottom Left
+	corners.push_back(vector3(m_v3MaxL.x, m_v3MinL.y, m_v3MaxL.z)); // Front Bottom Right
+
+	corners.push_back(vector3(m_v3MinL.x, m_v3MaxL.y, m_v3MinL.z)); // Back Top Left
+	corners.push_back(vector3(m_v3MaxL.x, m_v3MaxL.y, m_v3MinL.z)); // Back Top Right
+	corners.push_back(m_v3MinL);									// Back Bottom Left
+	corners.push_back(vector3(m_v3MaxL.x, m_v3MinL.y, m_v3MinL.z)); // Back Bottom Right
+
+	// Get Initial Min/Max Values for A
+	corners[0] = vector3(m_m4ToWorld * vector4(corners[0], 1.0f));
+	float aMin = glm::dot(corners[0], axis) / glm::length(axis);;
+	float aMax = glm::dot(corners[0], axis) / glm::length(axis);;
+	
+	for (int i = 1; i < (int)corners.size(); i++)
+	{
+		// Convert from Local Space to Global Space
+		corners[i] = vector3(m_m4ToWorld * vector4(corners[i], 1.0f));
+
+		// Update the Min/Max Projections for A
+		float projection = glm::dot(corners[i], axis) / glm::length(axis);
+
+		if (projection < aMin)
+			aMin = projection;
+		else if (projection > aMax)
+			aMax = projection;
+	}
+
+	// Find the 8 Corners of the Other Oriented Bounding Box (B)
+	std::vector<vector3> otherCorners;
+	auto otherMinL = a_pOther->GetMinLocal();
+	auto otherMaxL = a_pOther->GetMaxLocal();
+	otherCorners.push_back(vector3(otherMinL.x, otherMaxL.y, otherMaxL.z)); // Front Top Left
+	otherCorners.push_back(otherMaxL);									    // Front Top Right
+	otherCorners.push_back(vector3(otherMinL.x, otherMinL.y, otherMaxL.z)); // Front Bottom Left
+	otherCorners.push_back(vector3(otherMaxL.x, otherMinL.y, otherMaxL.z)); // Front Bottom Right
+
+	otherCorners.push_back(vector3(otherMinL.x, otherMaxL.y, otherMinL.z)); // Back Top Left
+	otherCorners.push_back(vector3(otherMaxL.x, otherMaxL.y, otherMinL.z)); // Back Top Right
+	otherCorners.push_back(otherMinL);									    // Back Bottom Left
+	otherCorners.push_back(vector3(otherMaxL.x, otherMinL.y, otherMinL.z)); // Back Bottom Right
+
+	// Get Initial Min/Max Values for B
+	otherCorners[0] = vector3(a_pOther->GetModelMatrix() * vector4(otherCorners[0], 1.0f));
+	float bMin = glm::dot(otherCorners[0], axis) / glm::length(axis);;
+	float bMax = glm::dot(otherCorners[0], axis) / glm::length(axis);;
+
+	for (int i = 1; i < (int)otherCorners.size(); i++)
+	{
+		// Convert from Local Space to Global Space
+		otherCorners[i] = vector3(a_pOther->GetModelMatrix() * vector4(otherCorners[i], 1.0f));
+
+		// Update the Min/Max Projections for B
+		float projection = glm::dot(otherCorners[i], axis) / glm::length(axis);
+
+		if (projection < bMin)
+			bMin = projection;
+		else if (projection > bMax)
+			bMax = projection;
+	}
+
+	// Check for Overlapping Between the Projections
+	if ((aMin < bMin && aMax > bMin) || (aMin < bMax && aMax > bMax) ||
+		(aMin > bMin && aMin < bMax) || (aMax > bMin && aMax < bMax))
+		return false;
+
+	return true;
+}
+
 uint MyRigidBody::SAT(MyRigidBody* const a_pOther)
 {
-	/*
-	Your code goes here instead of this comment;
+	// Get the X, Y, Z axes for Each OBB
+	std::vector<vector3> axes;
 
-	For this method, if there is an axis that separates the two objects
-	then the return will be different than 0; 1 for any separating axis
-	is ok if you are not going for the extra credit, if you could not
-	find a separating axis you need to return 0, there is an enum in
-	Simplex that might help you [eSATResults] feel free to use it.
-	(eSATResults::SAT_NONE has a value of 0)
-	*/
+	glm::mat3 A = glm::mat3(m_m4ToWorld);
+	vector3 AX = A[0];
+	axes.push_back(AX);
+	vector3 AY = A[1];
+	axes.push_back(AY);
+	vector3 AZ = A[2];
+	axes.push_back(AZ);
 
-	//there is no axis test that separates this two objects
+	glm::mat3 B = glm::mat3(a_pOther->GetModelMatrix());
+	vector3 BX = B[0];
+	axes.push_back(BX);
+	vector3 BY = B[1];
+	axes.push_back(BY);
+	vector3 BZ = B[2];
+	axes.push_back(BZ);
+
+	// Get the other 9 Axes through Cross Products
+	axes.push_back( glm::cross(AX, BX) ); // AX x BX
+	axes.push_back( glm::cross(AX, BY) ); // AX x BY
+	axes.push_back( glm::cross(AX, BZ) ); // AX x BZ
+
+	axes.push_back( glm::cross(AY, BX) ); // AY x BX
+	axes.push_back( glm::cross(AY, BY) ); // AY x BY
+	axes.push_back( glm::cross(AY, BZ) ); // AY x BZ
+
+	axes.push_back( glm::cross(AZ, BX) ); // AZ x BX
+	axes.push_back( glm::cross(AZ, BY) ); // AZ x BY
+	axes.push_back( glm::cross(AZ, BZ) ); // AZ x BZ
+
+	// Check if any axis test separates the two objects
+	for (int idx = 0; idx < (int)axes.size(); idx++)
+	{
+		if (Separation(a_pOther, axes[idx]))
+			return static_cast<eSATResults>(idx + 1);
+	}
+
+	// There is no axis test that separates this two objects
 	return eSATResults::SAT_NONE;
 }
