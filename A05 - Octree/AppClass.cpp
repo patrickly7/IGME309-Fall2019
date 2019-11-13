@@ -1,5 +1,6 @@
 #include "AppClass.h"
 using namespace Simplex;
+
 void Application::InitVariables(void)
 {
 	//Set the position and target of the camera
@@ -30,8 +31,13 @@ void Application::InitVariables(void)
 		}
 	}
 	m_uOctantLevels = 1;
+
+	// Initialize the Octree
+	m_pRoot = new MyOctant(m_uOctantLevels, 5);
+	
 	m_pEntityMngr->Update();
 }
+
 void Application::Update(void)
 {
 	//Update the system so it knows how much time has passed since the last call
@@ -49,14 +55,18 @@ void Application::Update(void)
 	//Add objects to render list
 	m_pEntityMngr->AddEntityToRenderList(-1, true);
 }
+
 void Application::Display(void)
 {
 	// Clear the screen
 	ClearScreen();
 
 	//display octree
-	//m_pRoot->Display();
-	
+	if (m_uOctantID == -1)
+		m_pRoot->Display(C_YELLOW);
+	else
+		m_pRoot->Display(m_uOctantID, C_YELLOW);
+
 	// draw a skybox
 	m_pMeshMngr->AddSkyboxToRenderList();
 	
@@ -72,8 +82,12 @@ void Application::Display(void)
 	//end the current frame (internally swaps the front and back buffers)
 	m_pWindow->display();
 }
+
 void Application::Release(void)
 {
+	// Release the Octree
+	SafeDelete(m_pRoot);
+
 	//release GUI
 	ShutdownGUI();
 }
